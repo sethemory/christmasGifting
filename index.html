@@ -127,6 +127,6 @@ async function setup(){
 
 (async()=>{
   if(SUPABASE_URL.includes("YOUR-PROJECT")){app.append(el("div",{className:"card"},el("h2",{textContent:"Almost ready"}),el("p",{textContent:"Add your Supabase URL and key at the top of index.html. The README walks through it."})));return}
-  try{location.hash==="#setup"?await setup():home()}catch(e){app.append(el("div",{className:"card err",textContent:"Couldn't connect to the database. Check the setup steps in the README."}))}
+  try{location.hash==="#setup"?await setup():home()}catch(e){app.append(el("div",{className:"card err",textContent:"Couldn't connect to the database. Details: "+e.message}))}
 })();
 </script></body></html>
