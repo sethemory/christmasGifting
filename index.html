@@ -40,8 +40,8 @@ canvas{position:fixed;inset:0;pointer-events:none;z-index:20}
 <canvas id="conf"></canvas>
 <script>
 /* ===== PASTE YOUR SUPABASE VALUES HERE (see README.md) ===== */
-const SUPABASE_URL = "https://igqctshojdmmoajhztgz.supabase.co/rest/v1/";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlncWN0c2hvamRtbW9hamh6dGd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4MDg4NDksImV4cCI6MjEwNjM4NDg0OX0.Jfiu5VIUfzlELcGnm5MdMhi-xuHPUv0hnWTJupFQvRs";
+const SUPABASE_URL = "https://igqctshojdmmoajhztgz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_LToZpedSCSgwhFvSRC_tPA_cZ0ZSgiV";
 /* =========================================================== */
 const H={apikey:SUPABASE_KEY,"Content-Type":"application/json"};
 const api=async(path,opt={})=>{const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:{...H,Prefer:"return=representation"},...opt});
