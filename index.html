@@ -16,7 +16,7 @@ main{max-width:640px;margin:0 auto;padding:24px 18px 60px}
 .card{background:#fff;border-radius:14px;padding:22px;margin:18px 0;border:2px solid var(--pine)}
 .card.gift{background:var(--cran);color:#fff;border-color:var(--cran);text-align:center}
 .big{font-size:clamp(40px,12vw,72px);font-weight:800;color:var(--gold);line-height:1.1;margin:8px 0}
-input,textarea{width:100%;font:inherit;padding:12px;border:2px solid #9fb3aa;border-radius:10px;background:#fff}
+input,textarea{width:100%;font:inherit;color:#16221d;-webkit-text-fill-color:#16221d;caret-color:#a8203b;color-scheme:light;opacity:1;padding:12px;border:2px solid #9fb3aa;border-radius:10px;background:#fff}
 input:focus,textarea:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 button{font:inherit;font-weight:700;padding:12px 20px;border:0;border-radius:10px;background:var(--pine);color:#fff;cursor:pointer}
 button.alt{background:var(--cran)} button.ghost{background:none;color:var(--cran);padding:6px 10px}
@@ -60,7 +60,7 @@ function confetti(){const c=$("#conf"),x=c.getContext("2d");c.width=innerWidth;c
 
 /* ---------- Home: type your name ---------- */
 function home(msg){
-  const inp=el("input",{placeholder:"Type your first name",autocomplete:"given-name",autofocus:true});
+  const inp=el("input",{placeholder:"Type your first name",autocomplete:"given-name",});
   const go=el("button",{textContent:"See my person"});
   const err=el("div",{className:"err",textContent:msg||""});
   const submit=async()=>{if(!clean(inp.value))return;go.disabled=true;err.textContent="";
@@ -68,7 +68,7 @@ function home(msg){
       if(!rows.length){err.textContent="We couldn't find that name. Try just your first name, spelled the way the organizer entered it.";go.disabled=false;return}
       localStorage.setItem("xmas_name",rows[0].name);enter(rows[0])}
     catch(e){err.textContent="Couldn't reach the exchange. Check your connection and try again.";go.disabled=false}};
-  go.onclick=submit;inp.onkeydown=e=>e.key==="Enter"&&submit();
+  go.onclick=submit;inp.addEventListener("keydown",e=>{if(e.key==="Enter")submit()});
   app.replaceChildren(el("div",{className:"card"},el("h2",{textContent:"What's your first name?"}),el("p",{className:"muted",textContent:"Type it in to find out who you're buying for."}),inp,el("div",{className:"row"},go),err));
   if(msg===undefined){const s=localStorage.getItem("xmas_name");if(s){inp.value=s}}
 }
