@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Family Christmas Exchange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--pine:#10352a;--cran:#a8203b;--gold:#e8b44c;--snow:#f1f5f3;--ink:#16221d}
+*{box-sizing:border-box}
+body{margin:0;font:17px/1.5 Nunito,system-ui,sans-serif;color:var(--ink);background:var(--snow);min-height:100vh}
+h1,h2,.big{font-family:Fraunces,Georgia,serif;margin:0}
+header{background:var(--pine);color:#fff;padding:28px 20px;text-align:center;border-bottom:6px solid var(--cran)}
+header h1{font-size:clamp(28px,6vw,44px);font-weight:800}
+header p{margin:6px 0 0;color:var(--gold)}
+main{max-width:640px;margin:0 auto;padding:24px 18px 60px}
+.card{background:#fff;border-radius:14px;padding:22px;margin:18px 0;border:2px solid var(--pine)}
+.card.gift{background:var(--cran);color:#fff;border-color:var(--cran);text-align:center}
+.big{font-size:clamp(40px,12vw,72px);font-weight:800;color:var(--gold);line-height:1.1;margin:8px 0}
+input,textarea{width:100%;font:inherit;padding:12px;border:2px solid #9fb3aa;border-radius:10px;background:#fff}
+input:focus,textarea:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button{font:inherit;font-weight:700;padding:12px 20px;border:0;border-radius:10px;background:var(--pine);color:#fff;cursor:pointer}
+button.alt{background:var(--cran)} button.ghost{background:none;color:var(--cran);padding:6px 10px}
+.row{display:flex;gap:10px;margin-top:12px}.row>input:first-child{flex:2}
+ul{list-style:none;padding:0;margin:10px 0}
+li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #d5e0db}
+li a{color:var(--cran)}
+.err{color:var(--cran);font-weight:700;margin-top:10px}.muted{color:#55675f}
+.pop{animation:pop .7s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.6) rotate(-4deg);opacity:0}to{transform:none;opacity:1}}
+#reveal{position:fixed;inset:0;background:var(--pine);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:10;padding:20px}
+#reveal .reel{font-family:Fraunces,Georgia,serif;font-weight:800;font-size:clamp(44px,14vw,96px);color:var(--gold);min-height:1.2em}
+#reveal .reel.land{animation:pop .6s cubic-bezier(.2,1.4,.4,1);color:#fff;text-shadow:0 0 30px var(--gold)}
+canvas{position:fixed;inset:0;pointer-events:none;z-index:20}
+@media(prefers-reduced-motion:reduce){.pop,.land{animation:none!important}}
+</style></head>
+<body>
+<header><h1>Family Christmas Exchange</h1><p>Who did Santa pick for you?</p></header>
+<main id="app"></main>
+<div id="reveal"><p id="rv-top" class="muted" style="color:#cfe0d8"></p><div class="reel" id="reel"></div><p id="rv-bot" style="color:var(--gold);min-height:1.5em"></p></div>
+<canvas id="conf"></canvas>
+<script>
+/* ===== PASTE YOUR SUPABASE VALUES HERE (see README.md) ===== */
+const SUPABASE_URL = "igqctshojdmmoajhztgz";
+const SUPABASE_KEY = "sb_publishable_LToZpedSCSgwhFvSRC_tPA_cZ0ZSgiV";
+/* =========================================================== */
+const H={apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
+const api=async(path,opt={})=>{const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:{...H,Prefer:"return=representation"},...opt});
+  if(!r.ok)throw new Error(await r.text());return r.status===204?[]:r.json()};
+const $=s=>document.querySelector(s), app=$("#app");
+const el=(t,p={},...k)=>{const e=document.createElement(t);Object.assign(e,p);k.forEach(c=>e.append(c));return e};
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const clean=s=>s.trim().replace(/[%_*,()]/g,"");
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function confetti(){const c=$("#conf"),x=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;
+  const cols=["#a8203b","#e8b44c","#fff","#2f8f5b"];
+  const ps=Array.from({length:150},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*16,vy:Math.random()*-14-3,s:5+Math.random()*7,c:cols[Math.random()*4|0],r:Math.random()*6}));
+  let f=0;(function t(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.r+=.2;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+  if(++f<170)requestAnimationFrame(t);else x.clearRect(0,0,c.width,c.height)})()}
+
+/* ---------- Home: type your name ---------- */
+function home(msg){
+  const inp=el("input",{placeholder:"Type your first name",autocomplete:"given-name",autofocus:true});
+  const go=el("button",{textContent:"See my person"});
+  const err=el("div",{className:"err",textContent:msg||""});
+  const submit=async()=>{if(!clean(inp.value))return;go.disabled=true;err.textContent="";
+    try{const rows=await api("people?select=*&name=ilike."+encodeURIComponent(clean(inp.value)));
+      if(!rows.length){err.textContent="We couldn't find that name. Try just your first name, spelled the way the organizer entered it.";go.disabled=false;return}
+      localStorage.setItem("xmas_name",rows[0].name);enter(rows[0])}
+    catch(e){err.textContent="Couldn't reach the exchange. Check your connection and try again.";go.disabled=false}};
+  go.onclick=submit;inp.onkeydown=e=>e.key==="Enter"&&submit();
+  app.replaceChildren(el("div",{className:"card"},el("h2",{textContent:"What's your first name?"}),el("p",{className:"muted",textContent:"Type it in to find out who you're buying for."}),inp,el("div",{className:"row"},go),err));
+  if(msg===undefined){const s=localStorage.getItem("xmas_name");if(s){inp.value=s}}
+}
+
+/* ---------- First-visit reveal ---------- */
+async function reveal(me){
+  const others=await api("people?select=name&family=neq."+encodeURIComponent(me.family));
+  const pool=others.map(o=>o.name),R=$("#reveal"),reel=$("#reel");
+  R.style.display="flex";reel.className="reel";$("#rv-bot").textContent="";
+  $("#rv-top").textContent=`Okay ${me.name}, Santa is drawing a name for you...`;
+  const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  let d=60;for(let i=0;i<28&&!reduce;i++){reel.textContent=pool[Math.random()*pool.length|0];await sleep(d);d*=1.1}
+  reel.textContent=me.gives_to;reel.className="reel land";$("#rv-bot").textContent="You're Santa for this person!";
+  confetti();await sleep(2600);R.style.display="none";
+  api("people?name=eq."+encodeURIComponent(me.name),{method:"PATCH",body:JSON.stringify({revealed:true})}).catch(()=>{});
+  me.revealed=true;
+}
+
+/* ---------- Personal page ---------- */
+async function enter(me){
+  if(!me.revealed)await reveal(me);
+  const [them]=await api("people?select=name,wishlist&name=eq."+encodeURIComponent(me.gives_to));
+  let list=me.wishlist||[];
+  const theirs=el("ul");(them.wishlist||[]).forEach(w=>theirs.append(el("li",{},w.link?el("a",{href:/^https?:\/\//.test(w.link)?w.link:"#",target:"_blank",rel:"noopener",textContent:w.item}):w.item)));
+  const mine=el("ul"),item=el("input",{placeholder:"Gift idea (e.g. size M hoodie)"}),link=el("input",{placeholder:"Link (optional)"}),status=el("div",{className:"muted"});
+  const save=async()=>{status.textContent="Saving...";try{await api("people?name=eq."+encodeURIComponent(me.name),{method:"PATCH",body:JSON.stringify({wishlist:list})});status.textContent="Saved."}catch(e){status.textContent="Couldn't save. Try again."}};
+  const draw=()=>{mine.replaceChildren(...list.map((w,i)=>el("li",{},w.item,el("button",{className:"ghost",textContent:"Remove",onclick:()=>{list.splice(i,1);draw();save()}}))))};
+  const add=el("button",{className:"alt",textContent:"Add idea",onclick:()=>{if(!item.value.trim())return;list.push({item:item.value.trim(),link:link.value.trim()});item.value=link.value="";draw();save()}});
+  draw();
+  app.replaceChildren(
+    el("div",{className:"card gift pop"},el("div",{textContent:`Hi ${me.name}, you're buying for`}),el("div",{className:"big",textContent:me.gives_to})),
+    el("div",{className:"card"},el("h2",{textContent:`${me.gives_to}'s wishlist`}),them.wishlist?.length?theirs:el("p",{className:"muted",textContent:`${me.gives_to} hasn't added anything yet. Check back soon.`})),
+    el("div",{className:"card"},el("h2",{textContent:"Your wishlist"}),el("p",{className:"muted",textContent:"Only the person buying for you can see this."}),mine,item,el("div",{className:"row"},link,add),status),
+    el("button",{className:"ghost",textContent:"Not you? Switch name",onclick:()=>{localStorage.removeItem("xmas_name");home("")}}));
+}
+
+/* ---------- Organizer setup (open this page with #setup on the end) ---------- */
+async function setup(){
+  const existing=await api("people?select=name");
+  if(existing.length){
+    const b=el("button",{className:"alt",textContent:"Reset everything and start over",onclick:async()=>{
+      if(prompt("This erases ALL assignments and wishlists. Type RESET to confirm.")!=="RESET")return;
+      await api("people?name=neq.%20",{method:"DELETE"});setup()}});
+    app.replaceChildren(el("div",{className:"card"},el("h2",{textContent:"Exchange is locked"}),el("p",{textContent:`${existing.length} people are set. Assignments can't change unless you reset.`}),b));return}
+  const a=el("textarea",{rows:7,placeholder:"One first name per line"}),b=el("textarea",{rows:7,placeholder:"One first name per line"}),err=el("div",{className:"err"});
+  const lines=t=>t.value.split("\n").map(s=>s.trim()).filter(Boolean);
+  const gen=el("button",{textContent:"Generate and lock assignments",onclick:async()=>{
+    const A=lines(a),B=lines(b),all=[...A,...B].map(s=>s.toLowerCase());
+    if(A.length!==B.length||!A.length)return err.textContent="Both families need the same number of names.";
+    if(new Set(all).size!==all.length)return err.textContent="Every first name must be unique across both families.";
+    const sa=shuffle(B),sb=shuffle(A);
+    const rows=[...A.map((n,i)=>({name:n,family:"A",gives_to:sa[i]})),...B.map((n,i)=>({name:n,family:"B",gives_to:sb[i]}))];
+    try{await api("people",{method:"POST",body:JSON.stringify(rows)});setup()}catch(e){err.textContent="Save failed: "+e.message}}});
+  app.replaceChildren(el("div",{className:"card"},el("h2",{textContent:"Organizer setup"}),el("p",{className:"muted",textContent:"Family A"}),a,el("p",{className:"muted",textContent:"Family B"}),b,el("div",{className:"row"},gen),err));
+}
+
+(async()=>{
+  if(SUPABASE_URL.includes("YOUR-PROJECT")){app.append(el("div",{className:"card"},el("h2",{textContent:"Almost ready"}),el("p",{textContent:"Add your Supabase URL and key at the top of index.html. The README walks through it."})));return}
+  try{location.hash==="#setup"?await setup():home()}catch(e){app.append(el("div",{className:"card err",textContent:"Couldn't connect to the database. Check the setup steps in the README."}))}
+})();
+</script></body></html>
