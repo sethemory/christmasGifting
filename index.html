@@ -5,21 +5,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--pine:#10352a;--cran:#a8203b;--gold:#e8b44c;--snow:#f1f5f3;--ink:#16221d}
+:root{--pine:#0b6b3a;--cran:#c8102e;--gold:#ffd966;--snow:#fffafa;--ink:#1d2a22}
 *{box-sizing:border-box}
 body{margin:0;font:17px/1.5 Nunito,system-ui,sans-serif;color:var(--ink);background:var(--snow);min-height:100vh}
 h1,h2,.big{font-family:Fraunces,Georgia,serif;margin:0}
-header{background:var(--pine);color:#fff;padding:28px 20px;text-align:center;border-bottom:6px solid var(--cran)}
+header{position:relative;z-index:1;background:var(--cran);color:#fff;padding:26px 20px 30px;text-align:center;border-bottom:14px solid transparent;border-image:repeating-linear-gradient(135deg,#fff 0 12px,var(--cran) 12px 24px) 14}
+.trees{font-size:clamp(28px,7vw,44px);letter-spacing:.15em}
 header h1{font-size:clamp(28px,6vw,44px);font-weight:800}
 header p{margin:6px 0 0;color:var(--gold)}
-main{max-width:640px;margin:0 auto;padding:24px 18px 60px}
-.card{background:#fff;border-radius:14px;padding:22px;margin:18px 0;border:2px solid var(--pine)}
-.card.gift{background:var(--cran);color:#fff;border-color:var(--cran);text-align:center}
+main{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:24px 18px 60px}
+.card{background:#fff;border-radius:14px;padding:22px;margin:18px 0;border:3px solid var(--pine);border-top:12px solid var(--cran);box-shadow:0 4px 0 var(--pine)}
+.card h2{color:var(--pine)}
+.card.gift{background:var(--pine);color:#fff;border-color:var(--cran);border-top-color:#fff;box-shadow:0 4px 0 var(--cran);text-align:center}.card.gift h2{color:#fff}
 .big{font-size:clamp(40px,12vw,72px);font-weight:800;color:var(--gold);line-height:1.1;margin:8px 0}
 input,textarea{width:100%;font:inherit;color:#16221d;-webkit-text-fill-color:#16221d;caret-color:#a8203b;color-scheme:light;opacity:1;padding:12px;border:2px solid #9fb3aa;border-radius:10px;background:#fff}
 input:focus,textarea:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 button{font:inherit;font-weight:700;padding:12px 20px;border:0;border-radius:10px;background:var(--pine);color:#fff;cursor:pointer}
-button.alt{background:var(--cran)} button.ghost{background:none;color:var(--cran);padding:6px 10px}
+button.alt{background:var(--cran)}button:hover{filter:brightness(1.12)} button.ghost{background:none;color:var(--cran);padding:6px 10px}
 .row{display:flex;gap:10px;margin-top:12px}.row>input:first-child{flex:2}
 ul{list-style:none;padding:0;margin:10px 0}
 li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #d5e0db}
@@ -27,17 +29,20 @@ li a{color:var(--cran)}
 .err{color:var(--cran);font-weight:700;margin-top:10px}.muted{color:#55675f}
 .pop{animation:pop .7s cubic-bezier(.2,1.4,.4,1)}
 @keyframes pop{from{transform:scale(.6) rotate(-4deg);opacity:0}to{transform:none;opacity:1}}
-#reveal{position:fixed;inset:0;background:var(--pine);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:10;padding:20px}
+#reveal{position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,#e0243f,#8f0a20);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:10;padding:20px}
 #reveal .reel{font-family:Fraunces,Georgia,serif;font-weight:800;font-size:clamp(44px,14vw,96px);color:var(--gold);min-height:1.2em}
 #reveal .reel.land{animation:pop .6s cubic-bezier(.2,1.4,.4,1);color:#fff;text-shadow:0 0 30px var(--gold)}
 canvas{position:fixed;inset:0;pointer-events:none;z-index:20}
+#snow{z-index:0}#reveal{isolation:isolate}
+footer{position:relative;z-index:1;text-align:center;font-size:34px;padding:0 0 30px}
 @media(prefers-reduced-motion:reduce){.pop,.land{animation:none!important}}
 </style></head>
 <body>
-<header><h1>Family Christmas Exchange</h1><p>Who did Santa pick for you?</p></header>
+<header><div class="trees" aria-hidden="true">🎄🎅🎄</div><h1>Family Christmas Exchange</h1><p>Who did Santa pick for you?</p></header>
 <main id="app"></main>
 <div id="reveal"><p id="rv-top" class="muted" style="color:#cfe0d8"></p><div class="reel" id="reel"></div><p id="rv-bot" style="color:var(--gold);min-height:1.5em"></p></div>
-<canvas id="conf"></canvas>
+<canvas id="snow"></canvas><canvas id="conf"></canvas>
+<footer aria-hidden="true">🎄 🎅 🎁 🎄 ⛄ 🎄</footer>
 <script>
 /* ===== PASTE YOUR SUPABASE VALUES HERE (see README.md) ===== */
 const SUPABASE_URL = "https://igqctshojdmmoajhztgz.supabase.co";
@@ -57,6 +62,14 @@ function confetti(){const c=$("#conf"),x=c.getContext("2d");c.width=innerWidth;c
   const ps=Array.from({length:150},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*16,vy:Math.random()*-14-3,s:5+Math.random()*7,c:cols[Math.random()*4|0],r:Math.random()*6}));
   let f=0;(function t(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.r+=.2;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
   if(++f<170)requestAnimationFrame(t);else x.clearRect(0,0,c.width,c.height)})()}
+
+/* ---------- Falling snow ---------- */
+(function(){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+  const c=$("#snow"),x=c.getContext("2d");let W,Hh;const size=()=>{W=c.width=innerWidth;Hh=c.height=innerHeight};size();addEventListener("resize",size);
+  const f=Array.from({length:70},()=>({x:Math.random()*W,y:Math.random()*Hh,r:1.5+Math.random()*3.5,v:.4+Math.random()*1.2,d:Math.random()*6}));
+  (function t(){x.clearRect(0,0,W,Hh);x.fillStyle="rgba(120,160,190,.55)";
+    f.forEach(p=>{p.y+=p.v;p.d+=.015;p.x+=Math.sin(p.d)*.6;if(p.y>Hh+5){p.y=-5;p.x=Math.random()*W}x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()});
+    requestAnimationFrame(t)})()})();
 
 /* ---------- Home: type your name ---------- */
 function home(msg){
